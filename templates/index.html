@@ -3,180 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Attendance Predictor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Student Attendance Predictor - Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .prediction-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .result-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .present {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .absent {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .late {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center mb-8 text-blue-600">Student Attendance Predictor</h1>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Input Form -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Student Information</h2>
-                <form id="predictionForm" class="space-y-4">
-                    <!-- Academic Performance -->
-                    <div class="space-y-4">
-                        <h3 class="font-medium text-gray-700">Academic Performance</h3>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Previous Attendance (%)</label>
-                            <input type="number" name="previous_attendance" min="0" max="100" step="0.1" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Previous Grades (0-100)</label>
-                            <input type="number" name="previous_grades" min="0" max="100" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Study Hours (per day)</label>
-                            <input type="number" name="study_hours" min="0" max="24" step="0.5" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                    </div>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">Student Attendance Predictor</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#how-it-works">How It Works</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/predict">Predict</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-                    <!-- Physical Factors -->
-                    <div class="space-y-4">
-                        <h3 class="font-medium text-gray-700">Physical Factors</h3>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Distance from School (km)</label>
-                            <input type="number" name="distance" min="0" max="50" step="0.1" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Sleep Hours</label>
-                            <input type="number" name="sleep_hours" min="0" max="24" step="0.5" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Health Status</label>
-                            <select name="health_status" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+    <div class="container">
+        <h1 class="text-center mb-4">Predict Student Attendance</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="prediction-card">
+                    <h3>Input Data</h3>
+                    <form id="predictionForm">
+                        <div class="form-group">
+                            <label for="health_status">Health Status</label>
+                            <select class="form-control" id="health_status" name="health_status" required>
                                 <option value="Good">Good</option>
                                 <option value="Fair">Fair</option>
                                 <option value="Poor">Poor</option>
                             </select>
                         </div>
-                    </div>
 
-                    <!-- Additional Factors -->
-                    <div class="space-y-4">
-                        <h3 class="font-medium text-gray-700">Additional Factors</h3>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Transportation Mode</label>
-                            <select name="transportation_mode" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <div class="form-group">
+                            <label for="transportation_mode">Transportation Mode</label>
+                            <select class="form-control" id="transportation_mode" name="transportation_mode" required>
                                 <option value="Bus">Bus</option>
                                 <option value="Car">Car</option>
                                 <option value="Walking">Walking</option>
                                 <option value="Bicycle">Bicycle</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Family Support</label>
-                            <select name="family_support" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Extracurricular Activities</label>
-                            <select name="extracurricular_activities" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="Yes">Yes</option>
-                                <option value="No">No</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Internet Access</label>
-                            <select name="internet_access" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="Yes">Yes</option>
-                                <option value="No">No</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Weather Condition</label>
-                            <select name="weather_condition" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="Good">Good</option>
-                                <option value="Fair">Fair</option>
-                                <option value="Poor">Poor</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Class Time</label>
-                            <select name="class_time" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="Morning">Morning</option>
-                                <option value="Afternoon">Afternoon</option>
-                                <option value="Evening">Evening</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Subject Difficulty</label>
-                            <select name="subject_difficulty" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Family Income Level</label>
-                            <select name="family_income_level" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600">Previous Absence Count</label>
-                            <input type="number" name="previous_absence_count" min="0" max="100" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                    </div>
 
-                    <button type="submit" 
-                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Predict Attendance
-                    </button>
-                </form>
+                        <div class="form-group">
+                            <label for="previous_attendance">Previous Attendance (%)</label>
+                            <input type="number" class="form-control" id="previous_attendance" name="previous_attendance" 
+                                   min="0" max="100" step="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="study_hours">Study Hours (per day)</label>
+                            <input type="number" class="form-control" id="study_hours" name="study_hours" 
+                                   min="0" max="24" step="0.5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sleep_hours">Sleep Hours</label>
+                            <input type="number" class="form-control" id="sleep_hours" name="sleep_hours" 
+                                   min="0" max="24" step="0.5" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Predict Attendance</button>
+                    </form>
+                </div>
             </div>
 
-            <!-- Results Section -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Prediction Results</h2>
-                <div id="results" class="space-y-6">
-                    <!-- Prediction Card -->
-                    <div id="predictionCard" class="hidden">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-lg font-medium text-gray-800 mb-2">Attendance Prediction</h3>
-                            <div id="predictionResult" class="text-2xl font-bold text-center mb-2"></div>
-                            <div id="confidenceScore" class="text-sm text-gray-600 text-center"></div>
+            <div class="col-md-6">
+                <div class="prediction-card">
+                    <h3>Prediction Result</h3>
+                    <div id="result" class="result-section" style="display: none;">
+                        <h4>Prediction: <span id="prediction"></span></h4>
+                        <div class="mt-3">
+                            <h5>Probabilities:</h5>
+                            <div class="progress mb-2">
+                                <div id="presentProb" class="progress-bar bg-success" role="progressbar"></div>
+                            </div>
+                            <div class="progress mb-2">
+                                <div id="absentProb" class="progress-bar bg-danger" role="progressbar"></div>
+                            </div>
+                            <div class="progress mb-2">
+                                <div id="lateProb" class="progress-bar bg-warning" role="progressbar"></div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Probability Chart -->
-                    <div id="probabilityChart" class="hidden">
-                        <canvas id="probabilityChartCanvas"></canvas>
-                    </div>
-
-                    <!-- Risk Factors -->
-                    <div id="riskFactors" class="hidden">
-                        <h3 class="text-lg font-medium text-gray-800 mb-2">Risk Factors</h3>
-                        <ul id="riskFactorsList" class="list-disc list-inside space-y-1 text-gray-600"></ul>
-                    </div>
-
-                    <!-- Feature Importance -->
-                    <div id="featureImportance" class="hidden">
-                        <h3 class="text-lg font-medium text-gray-800 mb-2">Feature Importance</h3>
-                        <div id="featureImportanceChart" class="h-64">
-                            <canvas id="featureImportanceCanvas"></canvas>
+                        <div id="riskFactors" class="mt-3">
+                            <h5>Risk Factors:</h5>
+                            <ul id="riskFactorsList"></ul>
                         </div>
                     </div>
                 </div>
@@ -188,60 +144,30 @@
         document.getElementById('predictionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Show loading state
-            const submitButton = e.target.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.textContent;
-            submitButton.disabled = true;
-            submitButton.textContent = 'Processing...';
-            
+            // Convert percentage to decimal
+            const previousAttendance = document.getElementById('previous_attendance').value / 100;
+            const studyHours = document.getElementById('study_hours').value / 24;
+            const sleepHours = document.getElementById('sleep_hours').value / 24;
+
+            const data = {
+                health_status: document.getElementById('health_status').value,
+                transportation_mode: document.getElementById('transportation_mode').value,
+                previous_attendance: previousAttendance,
+                study_hours: studyHours,
+                sleep_hours: sleepHours,
+                // Default values for other required fields
+                family_support: "High",
+                extracurricular_activities: "Yes",
+                internet_access: "Yes",
+                class_time: "Morning",
+                subject_difficulty: "Medium",
+                family_income_level: "Middle",
+                previous_grades: 0.75,
+                distance: 0.3,
+                previous_absence_count: 0.2
+            };
+
             try {
-                const formData = new FormData(e.target);
-                const data = {};
-                
-                // List of all required fields
-                const requiredFields = [
-                    'previous_attendance',
-                    'previous_grades',
-                    'study_hours',
-                    'distance',
-                    'sleep_hours',
-                    'health_status',
-                    'transportation_mode',
-                    'family_support',
-                    'extracurricular_activities',
-                    'internet_access',
-                    'weather_condition',
-                    'class_time',
-                    'subject_difficulty',
-                    'family_income_level',
-                    'previous_absence_count'
-                ];
-
-                // Check for missing fields
-                const missingFields = [];
-                for (const field of requiredFields) {
-                    const value = formData.get(field);
-                    if (!value) {
-                        missingFields.push(field);
-                    }
-                }
-
-                if (missingFields.length > 0) {
-                    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-                }
-                
-                // Convert form data to proper types
-                for (const [key, value] of formData.entries()) {
-                    if (['previous_attendance', 'previous_grades', 'study_hours', 
-                         'distance', 'sleep_hours', 'previous_absence_count'].includes(key)) {
-                        data[key] = parseFloat(value);
-                    } else {
-                        data[key] = value;
-                    }
-                }
-                
-                console.log('Submitting data:', data); // Debug log
-                
                 const response = await fetch('/api/predict', {
                     method: 'POST',
                     headers: {
@@ -249,103 +175,47 @@
                     },
                     body: JSON.stringify(data)
                 });
-                
+
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // Hide any existing error messages
-                    const errorDiv = document.getElementById('errorMessage');
-                    if (errorDiv) {
-                        errorDiv.classList.add('hidden');
-                    }
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('prediction').textContent = result.prediction;
                     
-                    // Show prediction card
-                    document.getElementById('predictionCard').classList.remove('hidden');
-                    document.getElementById('predictionResult').textContent = result.prediction;
-                    document.getElementById('confidenceScore').textContent = 
-                        `Confidence: ${(result.confidence * 100).toFixed(1)}%`;
-
-                    // Update probability chart
-                    document.getElementById('probabilityChart').classList.remove('hidden');
-                    const probCtx = document.getElementById('probabilityChartCanvas').getContext('2d');
-                    new Chart(probCtx, {
-                        type: 'bar',
-                        data: {
-                            labels: Object.keys(result.probabilities),
-                            datasets: [{
-                                label: 'Probability',
-                                data: Object.values(result.probabilities),
-                                backgroundColor: ['#10B981', '#EF4444', '#F59E0B']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    max: 1
-                                }
-                            }
-                        }
-                    });
+                    // Update probability bars
+                    document.getElementById('presentProb').style.width = (result.probabilities.Present * 100) + '%';
+                    document.getElementById('presentProb').textContent = 'Present: ' + (result.probabilities.Present * 100).toFixed(1) + '%';
+                    
+                    document.getElementById('absentProb').style.width = (result.probabilities.Absent * 100) + '%';
+                    document.getElementById('absentProb').textContent = 'Absent: ' + (result.probabilities.Absent * 100).toFixed(1) + '%';
+                    
+                    document.getElementById('lateProb').style.width = (result.probabilities.Late * 100) + '%';
+                    document.getElementById('lateProb').textContent = 'Late: ' + (result.probabilities.Late * 100).toFixed(1) + '%';
 
                     // Update risk factors
-                    document.getElementById('riskFactors').classList.remove('hidden');
                     const riskList = document.getElementById('riskFactorsList');
-                    riskList.innerHTML = result.risk_factors.length ? 
-                        result.risk_factors.map(factor => `<li>${factor}</li>`).join('') :
-                        '<li>No significant risk factors identified</li>';
-
-                    // Update feature importance
-                    document.getElementById('featureImportance').classList.remove('hidden');
-                    const impCtx = document.getElementById('featureImportanceCanvas').getContext('2d');
-                    new Chart(impCtx, {
-                        type: 'horizontalBar',
-                        data: {
-                            labels: Object.keys(result.feature_importance),
-                            datasets: [{
-                                label: 'Importance',
-                                data: Object.values(result.feature_importance),
-                                backgroundColor: '#3B82F6'
-                            }]
-                        },
-                        options: {
-                            indexAxis: 'y',
-                            responsive: true,
-                            scales: {
-                                x: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
+                    riskList.innerHTML = '';
+                    result.risk_factors.forEach(factor => {
+                        const li = document.createElement('li');
+                        li.textContent = factor;
+                        riskList.appendChild(li);
                     });
-                } else {
-                    // Show error message
-                    let errorDiv = document.getElementById('errorMessage');
-                    if (!errorDiv) {
-                        errorDiv = document.createElement('div');
-                        errorDiv.id = 'errorMessage';
-                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4';
-                        document.getElementById('results').prepend(errorDiv);
+
+                    // Add appropriate class based on prediction
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.className = 'result-section';
+                    if (result.prediction === 'Present') {
+                        resultDiv.classList.add('present');
+                    } else if (result.prediction === 'Absent') {
+                        resultDiv.classList.add('absent');
+                    } else {
+                        resultDiv.classList.add('late');
                     }
-                    errorDiv.textContent = result.error;
-                    errorDiv.classList.remove('hidden');
+                } else {
+                    alert('Error: ' + result.error);
                 }
             } catch (error) {
-                // Show error message
-                let errorDiv = document.getElementById('errorMessage');
-                if (!errorDiv) {
-                    errorDiv = document.createElement('div');
-                    errorDiv.id = 'errorMessage';
-                    errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4';
-                    document.getElementById('results').prepend(errorDiv);
-                }
-                errorDiv.textContent = error.message;
-                errorDiv.classList.remove('hidden');
-            } finally {
-                // Reset button state
-                submitButton.disabled = false;
-                submitButton.textContent = originalButtonText;
+                alert('Error: ' + error.message);
             }
         });
     </script>
