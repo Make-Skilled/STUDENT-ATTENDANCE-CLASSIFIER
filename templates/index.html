@@ -5,134 +5,542 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Attendance Predictor - Prediction</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
-        body {
-            background-color: #f8f9fa;
-            padding: 20px;
+        :root {
+            --primary-color: #4b6cb7;
+            --secondary-color: #182848;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
+        body {
+            background-color: var(--light-bg);
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: var(--card-shadow);
+        }
+
         .prediction-card {
             background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 20px;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            padding: 25px;
             margin-top: 20px;
+            transition: transform 0.3s ease;
         }
+
+        .prediction-card:hover {
+            transform: translateY(-5px);
+        }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
+            position: relative;
         }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-label i {
+            color: var(--primary-color);
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(75, 108, 183, 0.25);
+        }
+
+        .form-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .input-group {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-right: none;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+        }
+
+        .input-group:focus-within .input-group-text,
+        .input-group:focus-within .form-control {
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 12px 25px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
         .result-section {
             margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
+            padding: 25px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
         }
+
         .present {
-            background-color: #d4edda;
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
             border: 1px solid #c3e6cb;
         }
+
         .absent {
-            background-color: #f8d7da;
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
             border: 1px solid #f5c6cb;
         }
+
         .late {
-            background-color: #fff3cd;
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
             border: 1px solid #ffeeba;
+        }
+
+        .progress {
+            height: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            background-color: #e9ecef;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 30px;
+            transition: width 1s ease-in-out;
+        }
+
+        .risk-factor {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--danger-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .risk-factor:hover {
+            transform: translateX(5px);
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .spinner-border {
+            width: 4rem;
+            height: 4rem;
+            color: var(--primary-color);
+        }
+
+        .tooltip-inner {
+            max-width: 250px;
+            padding: 10px 15px;
+            background-color: var(--secondary-color);
+            font-size: 0.9rem;
+            border-radius: 8px;
+        }
+
+        .prediction-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--secondary-color);
+        }
+
+        .prediction-header h1 {
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .prediction-header p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        .section-title {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .alert {
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .prediction-card {
+                margin-top: 15px;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="/">Student Attendance Predictor</a>
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-calendar-check me-2"></i>
+                Student Attendance Predictor
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/#features">Features</a>
+                        <a class="nav-link" href="/#features">
+                            <i class="bi bi-star me-1"></i>Features
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/#how-it-works">How It Works</a>
+                        <a class="nav-link" href="/#how-it-works">
+                            <i class="bi bi-info-circle me-1"></i>How It Works
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/predict">Predict</a>
+                        <a class="nav-link active" href="/predict">
+                            <i class="bi bi-graph-up me-1"></i>Predict
+                        </a>
                     </li>
                 </ul>
-            </div>
-        </div>
+                        </div>
+                    </div>
     </nav>
 
     <div class="container">
-        <h1 class="text-center mb-4">Predict Student Attendance</h1>
+        <div class="prediction-header">
+            <h1>Predict Student Attendance</h1>
+            <p>Enter student information to predict their attendance status</p>
+                        </div>
         
         <div class="row">
             <div class="col-md-6">
                 <div class="prediction-card">
-                    <h3>Input Data</h3>
-                    <form id="predictionForm">
+                    <h3 class="section-title">
+                        <i class="bi bi-input-cursor-text me-2"></i>
+                        Input Data
+                    </h3>
+                    <form id="predictionForm" class="needs-validation" novalidate>
                         <div class="form-group">
-                            <label for="health_status">Health Status</label>
-                            <select class="form-control" id="health_status" name="health_status" required>
+                            <label class="form-label" for="health_status">
+                                <i class="bi bi-heart-pulse"></i>
+                                Health Status
+                            </label>
+                            <select class="form-select" id="health_status" name="health_status" required>
+                                <option value="">Select health status...</option>
                                 <option value="Good">Good</option>
                                 <option value="Fair">Fair</option>
                                 <option value="Poor">Poor</option>
                             </select>
-                        </div>
+                            <div class="invalid-feedback">Please select a health status.</div>
+                    </div>
 
                         <div class="form-group">
-                            <label for="transportation_mode">Transportation Mode</label>
-                            <select class="form-control" id="transportation_mode" name="transportation_mode" required>
+                            <label class="form-label" for="transportation_mode">
+                                <i class="bi bi-truck"></i>
+                                Transportation Mode
+                            </label>
+                            <select class="form-select" id="transportation_mode" name="transportation_mode" required>
+                                <option value="">Select transportation mode...</option>
                                 <option value="Bus">Bus</option>
                                 <option value="Car">Car</option>
                                 <option value="Walking">Walking</option>
                                 <option value="Bicycle">Bicycle</option>
                             </select>
+                            <div class="invalid-feedback">Please select a transportation mode.</div>
                         </div>
 
                         <div class="form-group">
-                            <label for="previous_attendance">Previous Attendance (%)</label>
-                            <input type="number" class="form-control" id="previous_attendance" name="previous_attendance" 
-                                   min="0" max="100" step="1" required>
+                            <label class="form-label" for="previous_attendance">
+                                <i class="bi bi-calendar-check"></i>
+                                Previous Attendance
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="previous_attendance" 
+                                       name="previous_attendance" min="0" max="100" step="1" required>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Enter a value between 0 and 100</div>
+                            <div class="invalid-feedback">Please enter a valid attendance percentage.</div>
                         </div>
 
                         <div class="form-group">
-                            <label for="study_hours">Study Hours (per day)</label>
-                            <input type="number" class="form-control" id="study_hours" name="study_hours" 
-                                   min="0" max="24" step="0.5" required>
+                            <label class="form-label" for="study_hours">
+                                <i class="bi bi-book"></i>
+                                Study Hours
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="study_hours" 
+                                       name="study_hours" min="0" max="24" step="0.5" required>
+                                <span class="input-group-text">hours/day</span>
+                            </div>
+                            <div class="form-text">Enter a value between 0 and 24</div>
+                            <div class="invalid-feedback">Please enter a valid number of study hours.</div>
                         </div>
 
                         <div class="form-group">
-                            <label for="sleep_hours">Sleep Hours</label>
-                            <input type="number" class="form-control" id="sleep_hours" name="sleep_hours" 
-                                   min="0" max="24" step="0.5" required>
+                            <label class="form-label" for="sleep_hours">
+                                <i class="bi bi-moon"></i>
+                                Sleep Hours
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="sleep_hours" 
+                                       name="sleep_hours" min="0" max="24" step="0.5" required>
+                                <span class="input-group-text">hours/day</span>
+                            </div>
+                            <div class="form-text">Enter a value between 0 and 24</div>
+                            <div class="invalid-feedback">Please enter a valid number of sleep hours.</div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Predict Attendance</button>
-                    </form>
+                        <div class="form-group">
+                            <label class="form-label" for="family_support">
+                                <i class="bi bi-people"></i>
+                                Family Support
+                            </label>
+                            <select class="form-select" id="family_support" name="family_support" required>
+                                <option value="">Select family support level...</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a family support level.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="extracurricular_activities">
+                                <i class="bi bi-trophy"></i>
+                                Extracurricular Activities
+                            </label>
+                            <select class="form-select" id="extracurricular_activities" name="extracurricular_activities" required>
+                                <option value="">Select participation...</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                            <div class="invalid-feedback">Please select extracurricular participation.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="internet_access">
+                                <i class="bi bi-wifi"></i>
+                                Internet Access
+                            </label>
+                            <select class="form-select" id="internet_access" name="internet_access" required>
+                                <option value="">Select internet access...</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                            <div class="invalid-feedback">Please select internet access status.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="class_time">
+                                <i class="bi bi-clock"></i>
+                                Class Time
+                            </label>
+                            <select class="form-select" id="class_time" name="class_time" required>
+                                <option value="">Select class time...</option>
+                                <option value="Morning">Morning</option>
+                                <option value="Afternoon">Afternoon</option>
+                                <option value="Evening">Evening</option>
+                            </select>
+                            <div class="invalid-feedback">Please select class time.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="subject_difficulty">
+                                <i class="bi bi-book"></i>
+                                Subject Difficulty
+                            </label>
+                            <select class="form-select" id="subject_difficulty" name="subject_difficulty" required>
+                                <option value="">Select difficulty level...</option>
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                            <div class="invalid-feedback">Please select subject difficulty.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="family_income_level">
+                                <i class="bi bi-cash-stack"></i>
+                                Family Income Level
+                            </label>
+                            <select class="form-select" id="family_income_level" name="family_income_level" required>
+                                <option value="">Select income level...</option>
+                                <option value="Low">Low</option>
+                                <option value="Middle">Middle</option>
+                                <option value="High">High</option>
+                            </select>
+                            <div class="invalid-feedback">Please select family income level.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="previous_grades">
+                                <i class="bi bi-star"></i>
+                                Previous Grades
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="previous_grades" 
+                                       name="previous_grades" min="0" max="100" step="1" required>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Enter a value between 0 and 100</div>
+                            <div class="invalid-feedback">Please enter a valid grade percentage.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="distance">
+                                <i class="bi bi-geo-alt"></i>
+                                Distance to School
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="distance" 
+                                       name="distance" min="0" max="50" step="0.1" required>
+                                <span class="input-group-text">km</span>
+                            </div>
+                            <div class="form-text">Enter a value between 0 and 50</div>
+                            <div class="invalid-feedback">Please enter a valid distance.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="previous_absence_count">
+                                <i class="bi bi-calendar-x"></i>
+                                Previous Absences
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="previous_absence_count" 
+                                       name="previous_absence_count" min="0" max="100" step="1" required>
+                                <span class="input-group-text">days</span>
+                            </div>
+                            <div class="form-text">Enter the number of previous absences</div>
+                            <div class="invalid-feedback">Please enter a valid number of absences.</div>
+                    </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3">
+                            <i class="bi bi-graph-up me-2"></i>Predict Attendance
+                    </button>
+                </form>
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="prediction-card">
-                    <h3>Prediction Result</h3>
+                    <h3 class="section-title">
+                        <i class="bi bi-clipboard-data me-2"></i>
+                        Prediction Result
+                    </h3>
                     <div id="result" class="result-section" style="display: none;">
-                        <h4>Prediction: <span id="prediction"></span></h4>
-                        <div class="mt-3">
-                            <h5>Probabilities:</h5>
-                            <div class="progress mb-2">
+                        <h4 class="mb-4">Prediction: <span id="prediction" class="fw-bold"></span></h4>
+                        <div class="alert mb-4" id="confidenceAlert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Confidence Score: <span id="confidenceScore" class="fw-bold"></span>
+                        </div>
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-bar-chart me-2"></i>
+                                Probabilities:
+                            </h5>
+                            <div class="progress mb-3">
                                 <div id="presentProb" class="progress-bar bg-success" role="progressbar"></div>
                             </div>
-                            <div class="progress mb-2">
+                            <div class="progress mb-3">
                                 <div id="absentProb" class="progress-bar bg-danger" role="progressbar"></div>
-                            </div>
-                            <div class="progress mb-2">
-                                <div id="lateProb" class="progress-bar bg-warning" role="progressbar"></div>
-                            </div>
                         </div>
-                        <div id="riskFactors" class="mt-3">
-                            <h5>Risk Factors:</h5>
-                            <ul id="riskFactorsList"></ul>
+                    </div>
+                        <div id="riskAnalysis">
+                            <h5 class="mb-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Risk Analysis:
+                            </h5>
+                            <div class="alert mb-3" id="riskLevelAlert">
+                                <i class="bi bi-shield me-2"></i>
+                                Overall Risk Level: <span id="riskLevel" class="fw-bold"></span>
+                    </div>
+                            <div id="riskFactorsList"></div>
+                    </div>
+                        <div id="recommendations" class="mt-4">
+                            <h5 class="mb-3">
+                                <i class="bi bi-lightbulb me-2"></i>
+                                Recommendations:
+                            </h5>
+                            <div id="recommendationsList" class="list-group"></div>
                         </div>
                     </div>
                 </div>
@@ -140,9 +548,34 @@
         </div>
     </div>
 
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        // Form validation
+        const form = document.getElementById('predictionForm');
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            if (!form.checkValidity()) {
+                e.stopPropagation();
+                form.classList.add('was-validated');
+                return;
+            }
+
+            // Show loading spinner
+            document.getElementById('loading').style.display = 'flex';
             
             // Convert percentage to decimal
             const previousAttendance = document.getElementById('previous_attendance').value / 100;
@@ -155,16 +588,15 @@
                 previous_attendance: previousAttendance,
                 study_hours: studyHours,
                 sleep_hours: sleepHours,
-                // Default values for other required fields
-                family_support: "High",
-                extracurricular_activities: "Yes",
-                internet_access: "Yes",
-                class_time: "Morning",
-                subject_difficulty: "Medium",
-                family_income_level: "Middle",
-                previous_grades: 0.75,
-                distance: 0.3,
-                previous_absence_count: 0.2
+                family_support: document.getElementById('family_support').value,
+                extracurricular_activities: document.getElementById('extracurricular_activities').value,
+                internet_access: document.getElementById('internet_access').value,
+                class_time: document.getElementById('class_time').value,
+                subject_difficulty: document.getElementById('subject_difficulty').value,
+                family_income_level: document.getElementById('family_income_level').value,
+                previous_grades: document.getElementById('previous_grades').value / 100,
+                distance: document.getElementById('distance').value / 50,
+                previous_absence_count: document.getElementById('previous_absence_count').value / 100
             };
 
             try {
@@ -175,49 +607,136 @@
                     },
                     body: JSON.stringify(data)
                 });
-
+                
                 const result = await response.json();
                 
                 if (response.ok) {
                     document.getElementById('result').style.display = 'block';
                     document.getElementById('prediction').textContent = result.prediction;
                     
-                    // Update probability bars
-                    document.getElementById('presentProb').style.width = (result.probabilities.Present * 100) + '%';
-                    document.getElementById('presentProb').textContent = 'Present: ' + (result.probabilities.Present * 100).toFixed(1) + '%';
-                    
-                    document.getElementById('absentProb').style.width = (result.probabilities.Absent * 100) + '%';
-                    document.getElementById('absentProb').textContent = 'Absent: ' + (result.probabilities.Absent * 100).toFixed(1) + '%';
-                    
-                    document.getElementById('lateProb').style.width = (result.probabilities.Late * 100) + '%';
-                    document.getElementById('lateProb').textContent = 'Late: ' + (result.probabilities.Late * 100).toFixed(1) + '%';
+                    // Update probability bars with animation
+                    const presentProb = result.probabilities.Present;  // Already a percentage
+                    const absentProb = result.probabilities.Absent;    // Already a percentage
+
+                    document.getElementById('presentProb').style.width = '0%';
+                    document.getElementById('absentProb').style.width = '0%';
+
+                    setTimeout(() => {
+                        document.getElementById('presentProb').style.width = presentProb + '%';
+                        document.getElementById('presentProb').textContent = 'Present: ' + presentProb.toFixed(1) + '%';
+                        
+                        document.getElementById('absentProb').style.width = absentProb + '%';
+                        document.getElementById('absentProb').textContent = 'Absent: ' + absentProb.toFixed(1) + '%';
+                    }, 100);
+
+                    // Update confidence score
+                    const confidenceScore = result.confidence_score;
+                    document.getElementById('confidenceScore').textContent = confidenceScore + '%';
+                    const confidenceAlert = document.getElementById('confidenceAlert');
+                    confidenceAlert.className = 'alert mb-4';
+                    if (confidenceScore >= 80) {
+                        confidenceAlert.classList.add('alert-success');
+                    } else if (confidenceScore >= 60) {
+                        confidenceAlert.classList.add('alert-warning');
+                    } else {
+                        confidenceAlert.classList.add('alert-danger');
+                    }
+
+                    // Update risk level
+                    const riskLevel = result.risk_analysis.risk_level;
+                    document.getElementById('riskLevel').textContent = riskLevel;
+                    const riskLevelAlert = document.getElementById('riskLevelAlert');
+                    riskLevelAlert.className = 'alert mb-3';
+                    if (riskLevel === 'Low') {
+                        riskLevelAlert.classList.add('alert-success');
+                    } else if (riskLevel === 'Medium') {
+                        riskLevelAlert.classList.add('alert-warning');
+                    } else {
+                        riskLevelAlert.classList.add('alert-danger');
+                    }
 
                     // Update risk factors
                     const riskList = document.getElementById('riskFactorsList');
                     riskList.innerHTML = '';
-                    result.risk_factors.forEach(factor => {
-                        const li = document.createElement('li');
-                        li.textContent = factor;
-                        riskList.appendChild(li);
+                    result.risk_analysis.risk_factors.forEach(category => {
+                        const categoryDiv = document.createElement('div');
+                        categoryDiv.className = 'card mb-3';
+                        categoryDiv.innerHTML = `
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-${getCategoryIcon(category.category)} me-2"></i>${category.category}</span>
+                                <span class="badge ${getImpactBadgeClass(category.impact)}">${category.impact} Impact</span>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    ${category.risks.map(risk => `
+                                        <li class="list-group-item">
+                                            <i class="bi bi-exclamation-circle me-2"></i>${risk}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `;
+                        riskList.appendChild(categoryDiv);
                     });
+
+                    // Update recommendations
+                    const recommendationsList = document.getElementById('recommendationsList');
+                    recommendationsList.innerHTML = '';
+                    const recommendations = result.risk_analysis.recommendations;
+                    
+                    // Only show recommendations section if there are recommendations
+                    const recommendationsSection = document.getElementById('recommendations');
+                    if (recommendations && recommendations.length > 0) {
+                        recommendationsSection.style.display = 'block';
+                        recommendations.forEach(rec => {
+                            const item = document.createElement('div');
+                            item.className = 'list-group-item';
+                            item.innerHTML = `<i class="bi bi-check-circle me-2"></i>${rec}`;
+                            recommendationsList.appendChild(item);
+                        });
+                    } else {
+                        recommendationsSection.style.display = 'none';
+                    }
 
                     // Add appropriate class based on prediction
                     const resultDiv = document.getElementById('result');
                     resultDiv.className = 'result-section';
                     if (result.prediction === 'Present') {
                         resultDiv.classList.add('present');
-                    } else if (result.prediction === 'Absent') {
+                } else {
                         resultDiv.classList.add('absent');
-                    } else {
-                        resultDiv.classList.add('late');
                     }
                 } else {
                     alert('Error: ' + result.error);
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
+            } finally {
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
             }
         });
+
+        // Helper functions for UI elements
+        function getCategoryIcon(category) {
+            const icons = {
+                'Health & Well-being': 'heart-pulse',
+                'Academic Performance': 'book',
+                'Attendance History': 'calendar-check',
+                'Environmental Factors': 'house',
+                'Transportation': 'truck'
+            };
+            return icons[category] || 'info-circle';
+        }
+
+        function getImpactBadgeClass(impact) {
+            const classes = {
+                'High': 'bg-danger',
+                'Medium': 'bg-warning',
+                'Low': 'bg-success'
+            };
+            return classes[impact] || 'bg-secondary';
+        }
     </script>
 </body>
 </html> 

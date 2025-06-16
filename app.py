@@ -8,22 +8,33 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 import joblib
 import os
 from generate_dataset import generate_attendance_data
+import logging
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
-# Define feature lists
-categorical_features = [
-    'health_status',
-    'transportation_mode',
-    'family_support',
-    'extracurricular_activities',
-    'internet_access',
-    'weather_condition',
-    'class_time',
-    'subject_difficulty',
-    'family_income_level'
-]
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+
+# Define feature lists and their allowed values
+categorical_features = {
+    'health_status': ['Good', 'Fair', 'Poor'],
+    'transportation_mode': ['Bus', 'Car', 'Walking', 'Bicycle'],
+    'family_support': ['High', 'Medium', 'Low'],
+    'extracurricular_activities': ['Yes', 'No'],
+    'internet_access': ['Yes', 'No'],
+    'class_time': ['Morning', 'Afternoon', 'Evening'],
+    'subject_difficulty': ['Easy', 'Medium', 'Hard'],
+    'family_income_level': ['Low', 'Middle', 'High']
+}
 
 numerical_features = [
     'previous_attendance',
@@ -34,11 +45,13 @@ numerical_features = [
     'previous_absence_count'
 ]
 
-# Initialize global variables
+# Global variables for model and encoders
 model = None
 label_encoders = {}
 target_encoder = None
-scaler = None
+scaler = StandardScaler()
+feature_importances = None
+feature_names = None
 
 # Load and preprocess data
 def load_data():
@@ -50,12 +63,16 @@ def load_data():
 
 # Train model
 def train_model():
+    global model, label_encoders, target_encoder, scaler
+    
     df = load_data()
     
     # Convert categorical variables to numerical
-    for col in categorical_features:
+    for col, allowed_values in categorical_features.items():
         le = LabelEncoder()
-        df[col] = le.fit_transform(df[col])
+        # Fit the encoder with all possible values
+        le.fit(allowed_values)
+        df[col] = le.transform(df[col])
         label_encoders[col] = le
     
     # Scale numerical features
@@ -69,6 +86,7 @@ def train_model():
     # Convert target to numerical
     le_target = LabelEncoder()
     y = le_target.fit_transform(y)
+    target_encoder = le_target
     
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -85,81 +103,314 @@ def train_model():
     
     return model, label_encoders, le_target, scaler
 
+# Initialize model and encoders when the application starts
+try:
+    if os.path.exists('attendance_model.pkl'):
+        model = joblib.load('attendance_model.pkl')
+        label_encoders = joblib.load('label_encoders.pkl')
+        target_encoder = joblib.load('target_encoder.pkl')
+        scaler = joblib.load('scaler.pkl')
+    else:
+        model, label_encoders, target_encoder, scaler = train_model()
+except Exception as e:
+    print(f"Error initializing model: {str(e)}")
+    model, label_encoders, target_encoder, scaler = train_model()
+
+def load_model_and_encoders():
+    """Load the model and encoders with error handling."""
+    global model, label_encoders, feature_importances, feature_names
+    
+    try:
+        # Load model
+        model_path = 'model/student_attendance_model.pkl'
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model file not found at {model_path}")
+        model = joblib.load(model_path)
+        logging.info("Model loaded successfully")
+        
+        # Load encoders
+        encoder_files = {
+            'health_status': 'model/health_status_encoder.pkl',
+            'transportation_mode': 'model/transportation_mode_encoder.pkl',
+            'family_support': 'model/family_support_encoder.pkl',
+            'extracurricular_activities': 'model/extracurricular_activities_encoder.pkl',
+            'internet_access': 'model/internet_access_encoder.pkl',
+            'class_time': 'model/class_time_encoder.pkl',
+            'subject_difficulty': 'model/subject_difficulty_encoder.pkl',
+            'family_income_level': 'model/family_income_level_encoder.pkl'
+        }
+        
+        for feature, file_path in encoder_files.items():
+            if os.path.exists(file_path):
+                label_encoders[feature] = joblib.load(file_path)
+                logging.info(f"Loaded encoder for {feature}")
+            else:
+                logging.warning(f"Encoder file not found for {feature}")
+                # Create a default encoder if file not found
+                label_encoders[feature] = LabelEncoder()
+                label_encoders[feature].fit(['default'])
+        
+        # Load feature importances if available
+        if os.path.exists('model/feature_importances.pkl'):
+            feature_importances = joblib.load('model/feature_importances.pkl')
+            feature_names = joblib.load('model/feature_names.pkl')
+            logging.info("Feature importances loaded successfully")
+        else:
+            # Set default feature names based on the model
+            feature_names = model.feature_names_in_ if hasattr(model, 'feature_names_in_') else []
+            logging.warning("Feature importances file not found, using default feature names")
+        
+    except Exception as e:
+        logging.error(f"Error loading model or encoders: {str(e)}")
+        raise
+
+def validate_input(data):
+    """Validate input data and return normalized values"""
+    validated_data = {}
+    
+    # Validate categorical features
+    categorical_features = {
+        'health_status': ['Good', 'Fair', 'Poor'],
+        'transportation_mode': ['Bus', 'Car', 'Walking', 'Bicycle'],
+        'family_support': ['High', 'Medium', 'Low'],
+        'extracurricular_activities': ['Yes', 'No'],
+        'internet_access': ['Yes', 'No'],
+        'class_time': ['Morning', 'Afternoon', 'Evening'],
+        'subject_difficulty': ['Easy', 'Medium', 'Hard'],
+        'family_income_level': ['Low', 'Middle', 'High']
+    }
+    
+    for feature, allowed_values in categorical_features.items():
+        if feature not in data:
+            raise ValueError(f"Missing required field: {feature}")
+        if data[feature] not in allowed_values:
+            raise ValueError(f"Invalid value for {feature}. Allowed values: {allowed_values}")
+        validated_data[feature] = data[feature]
+    
+    # Validate numerical features
+    numerical_features = {
+        'previous_attendance': (0, 1),
+        'study_hours': (0, 1),
+        'sleep_hours': (0, 1),
+        'previous_grades': (0, 1),
+        'distance': (0, 1),
+        'previous_absence_count': (0, 1)
+    }
+    
+    for feature, (min_val, max_val) in numerical_features.items():
+        if feature not in data:
+            raise ValueError(f"Missing required field: {feature}")
+        try:
+            value = float(data[feature])
+            if not min_val <= value <= max_val:
+                raise ValueError(f"{feature} must be between {min_val} and {max_val}")
+            validated_data[feature] = value
+        except ValueError as e:
+            raise ValueError(f"Invalid value for {feature}: {str(e)}")
+    
+    return validated_data
+
+def prepare_features(data):
+    """Prepare features for prediction by encoding categorical variables and normalizing numerical ones"""
+    features = []
+    
+    # Encode categorical features
+    categorical_features = [
+        'health_status',
+        'transportation_mode',
+        'family_support',
+        'extracurricular_activities',
+        'internet_access',
+        'class_time',
+        'subject_difficulty',
+        'family_income_level'
+    ]
+    
+    for feature in categorical_features:
+        if feature in label_encoders:
+            value = data[feature]
+            if value not in label_encoders[feature].classes_:
+                # Handle unseen labels by using the most common class
+                value = label_encoders[feature].classes_[0]
+            encoded_value = label_encoders[feature].transform([value])[0]
+            features.append(encoded_value)
+    
+    # Add numerical features
+    numerical_features = [
+        'previous_attendance',
+        'study_hours',
+        'sleep_hours',
+        'previous_grades',
+        'distance',
+        'previous_absence_count'
+    ]
+    
+    for feature in numerical_features:
+        features.append(data[feature])
+    
+    return features
+
+def analyze_risk_factors(data):
+    """Analyze risk factors based on input data with detailed insights"""
+    risk_factors = []
+    risk_level = "Low"  # Default risk level
+    
+    # Health and Well-being Analysis
+    health_risks = []
+    if data['health_status'] == 'Poor':
+        health_risks.append("Poor health status")
+    if data['sleep_hours'] < 0.25:  # Less than 6 hours
+        health_risks.append("Insufficient sleep")
+    elif data['sleep_hours'] > 0.4:  # More than 9.6 hours
+        health_risks.append("Excessive sleep")
+    if health_risks:
+        risk_factors.append({
+            "category": "Health & Well-being",
+            "risks": health_risks,
+            "impact": "High" if len(health_risks) > 1 else "Medium"
+        })
+        risk_level = "High" if len(health_risks) > 1 else "Medium"
+
+    # Academic Performance Analysis
+    academic_risks = []
+    if data['previous_grades'] < 0.6:
+        academic_risks.append("Low previous grades")
+    if data['study_hours'] < 0.2:  # Less than 5 hours
+        academic_risks.append("Low study hours")
+    if data['subject_difficulty'] == 'Hard':
+        academic_risks.append("Challenging subject difficulty")
+    if academic_risks:
+        risk_factors.append({
+            "category": "Academic Performance",
+            "risks": academic_risks,
+            "impact": "High" if len(academic_risks) > 1 else "Medium"
+        })
+        if risk_level != "High":
+            risk_level = "High" if len(academic_risks) > 1 else "Medium"
+
+    # Attendance History Analysis
+    attendance_risks = []
+    if data['previous_attendance'] < 0.7:
+        attendance_risks.append("Low previous attendance record")
+    if data['previous_absence_count'] > 0.2:
+        attendance_risks.append("High number of previous absences")
+    if attendance_risks:
+        risk_factors.append({
+            "category": "Attendance History",
+            "risks": attendance_risks,
+            "impact": "High" if len(attendance_risks) > 1 else "Medium"
+        })
+        if risk_level != "High":
+            risk_level = "High" if len(attendance_risks) > 1 else "Medium"
+
+    # Environmental Factors Analysis
+    environmental_risks = []
+    if data['family_support'] == 'Low':
+        environmental_risks.append("Low family support")
+    if data['internet_access'] == 'No':
+        environmental_risks.append("No internet access")
+    if data['family_income_level'] == 'Low':
+        environmental_risks.append("Low family income")
+    if environmental_risks:
+        risk_factors.append({
+            "category": "Environmental Factors",
+            "risks": environmental_risks,
+            "impact": "High" if len(environmental_risks) > 1 else "Medium"
+        })
+        if risk_level != "High":
+            risk_level = "High" if len(environmental_risks) > 1 else "Medium"
+
+    # Transportation Analysis
+    transport_risks = []
+    if data['transportation_mode'] == 'Walking' and data['distance'] > 0.3:
+        transport_risks.append("Long walking distance")
+    if data['transportation_mode'] == 'Bicycle' and data['distance'] > 0.4:
+        transport_risks.append("Long cycling distance")
+    if transport_risks:
+        risk_factors.append({
+            "category": "Transportation",
+            "risks": transport_risks,
+            "impact": "High" if len(transport_risks) > 1 else "Medium"
+        })
+        if risk_level != "High":
+            risk_level = "High" if len(transport_risks) > 1 else "Medium"
+
+    # Add recommendations based on risk factors
+    recommendations = []
+    if health_risks:
+        recommendations.append("Consider consulting a healthcare provider")
+    if academic_risks:
+        recommendations.append("Seek additional academic support or tutoring")
+    if attendance_risks:
+        recommendations.append("Develop a regular attendance routine")
+    if environmental_risks:
+        recommendations.append("Engage with school support services")
+    if transport_risks:
+        recommendations.append("Explore alternative transportation options")
+
+    return {
+        "risk_factors": risk_factors,
+        "risk_level": risk_level,
+        "recommendations": recommendations
+    }
+
 @app.route('/')
 def home():
+    return render_template('landing.html')
+
+@app.route('/predict')
+def predict_page():
     return render_template('index.html')
 
 @app.route('/api/predict', methods=['POST'])
 def predict():
     try:
-        # Get JSON data from request
         data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
-
-        # Validate required fields
-        required_fields = categorical_features + numerical_features
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
-
-        # Convert input data to DataFrame
-        input_data = pd.DataFrame([data])
         
-        # Transform categorical features
-        for feature in categorical_features:
-            if feature in input_data.columns:
-                try:
-                    le = label_encoders[feature]
-                    input_data[feature] = le.transform(input_data[feature])
-                except Exception as e:
-                    return jsonify({'error': f'Error processing {feature}: {str(e)}'}), 400
+        # Validate input data
+        if not validate_input(data):
+            return jsonify({'error': 'Invalid input data'}), 400
         
-        # Scale numerical features
-        try:
-            numerical_data = input_data[numerical_features]
-            scaled_data = scaler.transform(numerical_data)
-            input_data[numerical_features] = scaled_data
-        except Exception as e:
-            return jsonify({'error': f'Error scaling numerical features: {str(e)}'}), 400
+        # Prepare features for prediction
+        features = prepare_features(data)
         
-        # Make prediction
-        try:
-            prediction = model.predict(input_data)[0]
-            probabilities = model.predict_proba(input_data)[0]
-        except Exception as e:
-            return jsonify({'error': f'Error making prediction: {str(e)}'}), 400
+        # Get prediction probabilities
+        probabilities = model.predict_proba([features])[0]
         
-        # Get feature importance
-        try:
-            feature_importance = dict(zip(model.feature_names_in_, model.feature_importances_))
-            sorted_importance = dict(sorted(feature_importance.items(), key=lambda x: x[1], reverse=True))
-        except Exception as e:
-            return jsonify({'error': f'Error calculating feature importance: {str(e)}'}), 400
+        # Map probabilities to classes (0: Absent, 1: Present)
+        present_prob = float(probabilities[1])  # Probability of class 1 (Present)
+        absent_prob = float(probabilities[0])   # Probability of class 0 (Absent)
         
-        # Calculate risk factors
-        risk_factors = []
-        for feature, value in data.items():
-            if feature in ['previous_attendance', 'study_hours', 'sleep_hours']:
-                if float(value) < 0.5:  # Low values are risk factors
-                    risk_factors.append(f"{feature.replace('_', ' ').title()}: {value}")
-            elif feature in ['distance', 'previous_absence_count']:
-                if float(value) > 0.7:  # High values are risk factors
-                    risk_factors.append(f"{feature.replace('_', ' ').title()}: {value}")
+        # Determine prediction based on highest probability
+        prediction_label = "Present" if present_prob > absent_prob else "Absent"
         
-        return jsonify({
-            'prediction': prediction,
+        # Get detailed risk analysis
+        risk_analysis = analyze_risk_factors(data)
+        
+        # Calculate confidence score based on the predicted class probability
+        confidence_score = present_prob * 100 if prediction_label == "Present" else absent_prob * 100
+        
+        # Prepare response
+        response = {
+            'prediction': prediction_label,
             'probabilities': {
-                'Present': float(probabilities[0]),
-                'Absent': float(probabilities[1]),
-                'Late': float(probabilities[2])
+                'Present': round(present_prob * 100, 1),
+                'Absent': round(absent_prob * 100, 1)
             },
-            'feature_importance': sorted_importance,
-            'risk_factors': risk_factors,
-            'confidence': float(max(probabilities))
-        })
+            'confidence_score': round(confidence_score, 1),
+            'risk_analysis': risk_analysis
+        }
+        
+        # Log prediction details
+        app.logger.info(f"Prediction made: {prediction_label} with confidence {confidence_score}%")
+        app.logger.info(f"Probabilities - Present: {present_prob*100}%, Absent: {absent_prob*100}%")
+        app.logger.info(f"Risk level: {risk_analysis['risk_level']}")
+        
+        return jsonify(response)
+        
     except Exception as e:
-        return jsonify({'error': f'Unexpected error: {str(e)}'}), 400
+        app.logger.error(f"Prediction error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/features', methods=['GET'])
 def get_features():
@@ -186,7 +437,7 @@ def get_model_info():
             'target_distribution': df['attendance_status'].value_counts().to_dict(),
             'feature_types': {
                 'numerical': numerical_features,
-                'categorical': categorical_features
+                'categorical': list(categorical_features.keys())
             }
         }
         return jsonify({
@@ -200,4 +451,9 @@ def get_model_info():
         }), 400
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    try:
+        load_model_and_encoders()
+        app.run(debug=True)
+    except Exception as e:
+        logging.error(f"Application startup error: {str(e)}")
+        raise 
