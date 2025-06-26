@@ -46,9 +46,11 @@ def train_and_save_model():
     
     # Prepare features and target
     categorical_features = [
-        'health_status', 'transportation_mode', 'family_support',
-        'extracurricular_activities', 'internet_access', 'class_time',
-        'subject_difficulty', 'family_income_level'
+        'health_status',
+        'transportation_mode',
+        'extracurricular_activities',
+        'class_time',
+        'subject_difficulty'
     ]
     
     numerical_features = [

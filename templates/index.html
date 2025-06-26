@@ -370,20 +370,6 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label" for="family_support">
-                                <i class="bi bi-people"></i>
-                                Family Support
-                            </label>
-                            <select class="form-select" id="family_support" name="family_support" required>
-                                <option value="">Select family support level...</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
-                            <div class="invalid-feedback">Please select a family support level.</div>
-                        </div>
-
-                        <div class="form-group">
                             <label class="form-label" for="extracurricular_activities">
                                 <i class="bi bi-trophy"></i>
                                 Extracurricular Activities
@@ -395,20 +381,6 @@
                             </select>
                             <div class="invalid-feedback">Please select extracurricular participation.</div>
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="internet_access">
-                                <i class="bi bi-wifi"></i>
-                                Internet Access
-                            </label>
-                            <select class="form-select" id="internet_access" name="internet_access" required>
-                                <option value="">Select internet access...</option>
-                                <option value="Yes">Yes</option>
-                                <option value="No">No</option>
-                            </select>
-                            <div class="invalid-feedback">Please select internet access status.</div>
-                        </div>
-
                         <div class="form-group">
                             <label class="form-label" for="class_time">
                                 <i class="bi bi-clock"></i>
@@ -435,20 +407,6 @@
                                 <option value="Hard">Hard</option>
                             </select>
                             <div class="invalid-feedback">Please select subject difficulty.</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="family_income_level">
-                                <i class="bi bi-cash-stack"></i>
-                                Family Income Level
-                            </label>
-                            <select class="form-select" id="family_income_level" name="family_income_level" required>
-                                <option value="">Select income level...</option>
-                                <option value="Low">Low</option>
-                                <option value="Middle">Middle</option>
-                                <option value="High">High</option>
-                            </select>
-                            <div class="invalid-feedback">Please select family income level.</div>
                         </div>
 
                         <div class="form-group">
@@ -588,12 +546,9 @@
                 previous_attendance: previousAttendance,
                 study_hours: studyHours,
                 sleep_hours: sleepHours,
-                family_support: document.getElementById('family_support').value,
                 extracurricular_activities: document.getElementById('extracurricular_activities').value,
-                internet_access: document.getElementById('internet_access').value,
                 class_time: document.getElementById('class_time').value,
                 subject_difficulty: document.getElementById('subject_difficulty').value,
-                family_income_level: document.getElementById('family_income_level').value,
                 previous_grades: document.getElementById('previous_grades').value / 100,
                 distance: document.getElementById('distance').value / 50,
                 previous_absence_count: document.getElementById('previous_absence_count').value / 100

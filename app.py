@@ -28,12 +28,9 @@ logging.basicConfig(
 categorical_features = {
     'health_status': ['Good', 'Fair', 'Poor'],
     'transportation_mode': ['Bus', 'Car', 'Walking', 'Bicycle'],
-    'family_support': ['High', 'Medium', 'Low'],
     'extracurricular_activities': ['Yes', 'No'],
-    'internet_access': ['Yes', 'No'],
     'class_time': ['Morning', 'Afternoon', 'Evening'],
-    'subject_difficulty': ['Easy', 'Medium', 'Hard'],
-    'family_income_level': ['Low', 'Middle', 'High']
+    'subject_difficulty': ['Easy', 'Medium', 'Hard']
 }
 
 numerical_features = [
@@ -80,7 +77,7 @@ def train_model():
         scaler.fit_transform(df[[col]])
     
     # Prepare features and target
-    X = df.drop(['attendance_status', 'student_id', 'date'], axis=1)
+    X = df.drop(['attendance_status'], axis=1)
     y = df['attendance_status']
     
     # Convert target to numerical
@@ -132,12 +129,9 @@ def load_model_and_encoders():
         encoder_files = {
             'health_status': 'model/health_status_encoder.pkl',
             'transportation_mode': 'model/transportation_mode_encoder.pkl',
-            'family_support': 'model/family_support_encoder.pkl',
             'extracurricular_activities': 'model/extracurricular_activities_encoder.pkl',
-            'internet_access': 'model/internet_access_encoder.pkl',
             'class_time': 'model/class_time_encoder.pkl',
-            'subject_difficulty': 'model/subject_difficulty_encoder.pkl',
-            'family_income_level': 'model/family_income_level_encoder.pkl'
+            'subject_difficulty': 'model/subject_difficulty_encoder.pkl'
         }
         
         for feature, file_path in encoder_files.items():
@@ -169,17 +163,6 @@ def validate_input(data):
     validated_data = {}
     
     # Validate categorical features
-    categorical_features = {
-        'health_status': ['Good', 'Fair', 'Poor'],
-        'transportation_mode': ['Bus', 'Car', 'Walking', 'Bicycle'],
-        'family_support': ['High', 'Medium', 'Low'],
-        'extracurricular_activities': ['Yes', 'No'],
-        'internet_access': ['Yes', 'No'],
-        'class_time': ['Morning', 'Afternoon', 'Evening'],
-        'subject_difficulty': ['Easy', 'Medium', 'Hard'],
-        'family_income_level': ['Low', 'Middle', 'High']
-    }
-    
     for feature, allowed_values in categorical_features.items():
         if feature not in data:
             raise ValueError(f"Missing required field: {feature}")
@@ -215,17 +198,6 @@ def prepare_features(data):
     features = []
     
     # Encode categorical features
-    categorical_features = [
-        'health_status',
-        'transportation_mode',
-        'family_support',
-        'extracurricular_activities',
-        'internet_access',
-        'class_time',
-        'subject_difficulty',
-        'family_income_level'
-    ]
-    
     for feature in categorical_features:
         if feature in label_encoders:
             value = data[feature]
@@ -236,15 +208,6 @@ def prepare_features(data):
             features.append(encoded_value)
     
     # Add numerical features
-    numerical_features = [
-        'previous_attendance',
-        'study_hours',
-        'sleep_hours',
-        'previous_grades',
-        'distance',
-        'previous_absence_count'
-    ]
-    
     for feature in numerical_features:
         features.append(data[feature])
     
@@ -305,12 +268,10 @@ def analyze_risk_factors(data):
 
     # Environmental Factors Analysis
     environmental_risks = []
-    if data['family_support'] == 'Low':
-        environmental_risks.append("Low family support")
-    if data['internet_access'] == 'No':
-        environmental_risks.append("No internet access")
-    if data['family_income_level'] == 'Low':
-        environmental_risks.append("Low family income")
+    if data['transportation_mode'] == 'Walking' and data['distance'] > 0.3:
+        environmental_risks.append("Long walking distance")
+    if data['transportation_mode'] == 'Bicycle' and data['distance'] > 0.4:
+        environmental_risks.append("Long cycling distance")
     if environmental_risks:
         risk_factors.append({
             "category": "Environmental Factors",

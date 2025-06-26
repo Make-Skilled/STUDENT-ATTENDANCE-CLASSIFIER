@@ -9,23 +9,17 @@ def generate_attendance_data(n_samples=1000):
     # Define possible values for categorical features
     health_status = ['Good', 'Fair', 'Poor']
     transportation_mode = ['Car', 'Bus', 'Walking', 'Bicycle']
-    family_support = ['High', 'Medium', 'Low']
     extracurricular_activities = ['Yes', 'No']
-    internet_access = ['Yes', 'No']
     class_time = ['Morning', 'Afternoon', 'Evening']
     subject_difficulty = ['Easy', 'Medium', 'Hard']
-    family_income_level = ['Low', 'Middle', 'High']
     
     # Generate data
     data = {
         'health_status': np.random.choice(health_status, n_samples),
         'transportation_mode': np.random.choice(transportation_mode, n_samples),
-        'family_support': np.random.choice(family_support, n_samples),
         'extracurricular_activities': np.random.choice(extracurricular_activities, n_samples),
-        'internet_access': np.random.choice(internet_access, n_samples),
         'class_time': np.random.choice(class_time, n_samples),
         'subject_difficulty': np.random.choice(subject_difficulty, n_samples),
-        'family_income_level': np.random.choice(family_income_level, n_samples),
     }
     
     # Generate numerical features with realistic distributions
@@ -50,7 +44,6 @@ def generate_attendance_data(n_samples=1000):
     
     present_prob = (
         (df['health_status'] == 'Good').astype(int) * 0.2 +
-        (df['family_support'] == 'High').astype(int) * 0.15 +
         df['previous_attendance'] * 0.2 +
         df['previous_grades'] * 0.15 +
         (1 - df['distance']) * 0.1 +
